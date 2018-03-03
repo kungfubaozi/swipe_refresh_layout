@@ -22,12 +22,13 @@ typedef Future<Null> RefreshCallback();
 typedef void OnItemClickListener(int index);
 
 class SwipeRefreshLayout extends StatefulWidget {
-  const SwipeRefreshLayout(
-      {Key key,
-      @required this.onLoad,
-      this.onLoadMore, //load more不添加也就是不需要上拉刷新
-      this.backgroundColor,
-      this.child})
+  const SwipeRefreshLayout({
+    Key key,
+    @required this.onLoad,
+    this.onLoadMore, //load more不添加也就是不需要上拉刷新
+    this.backgroundColor,
+    this.child,
+  })
       : assert(onLoad != null),
         assert(child != null),
         super(key: key);
@@ -42,6 +43,9 @@ class SwipeRefreshLayout extends StatefulWidget {
   final Color backgroundColor;
 
   final Widget child;
+
+  final ScrollNotificationPredicate notificationPredicate =
+      defaultScrollNotificationPredicate;
 
   @override
   _SwipeRefreshLayoutState createState() => new _SwipeRefreshLayoutState();
@@ -184,18 +188,21 @@ class _SwipeRefreshLayoutState extends State<SwipeRefreshLayout>
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
+    if (!widget.notificationPredicate(notification)) return false;
     if (_running) return false;
     if (notification is ScrollStartNotification) {
       _dragOffset = 0.0;
       _mode = _RefreshMode.drag;
-    }
-    if (notification is ScrollUpdateNotification) {
+      return false;
+    } else if (notification is ScrollUpdateNotification) {
+      if (!notification.metrics.atEdge) return false;
       //这里是ios(测试发现当当前list占满屏幕时刷新会出现位置错误问题)
       if (_mode == _RefreshMode.drag || _mode == _RefreshMode.armed) {
         _dragOffset -= notification.scrollDelta;
         _checkDragOffset(notification.metrics.viewportDimension);
       }
     } else if (notification is OverscrollNotification && !_running) {
+      if (!notification.metrics.atEdge) return false;
       //这里是android(目前测试没问题)
       if (_mode == _RefreshMode.drag || _mode == _RefreshMode.armed) {
         _dragOffset -= notification.overscroll / 2.0;
