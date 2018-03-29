@@ -229,7 +229,7 @@ class _SwipeRefreshLayoutState extends State<SwipeRefreshLayout>
   }
 
   void _checkDragOffset(double extent) {
-    double newValue = _dragOffset.abs() / (extent * 0.25);
+    double newValue = _dragOffset.abs() / (extent * 0.13);
     if (_mode == _RefreshMode.upper || _mode == _RefreshMode.lower)
       newValue = math.max(newValue, 1.0 / 1.5);
     newValue = newValue.clamp(0.0, 1.0);
